@@ -214,11 +214,12 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Hardcoded role mapping for this 2-person household app.
 const ROLE_MAP = {
   "stserk@gmail.com": { role: "parent", display_name: "Parent" },
+  "natasa.oikonomou@gmail.com": { role: "parent", display_name: "Parent" },
   "zoe.tserkz@gmail.com": { role: "daughter", display_name: "Zoe" },
 };
 
 function fmt(n) {
-  return "$" + Number(n).toFixed(2);
+  return "€" + Number(n).toFixed(2);
 }
 
 function todayStr() {
@@ -310,6 +311,7 @@ function App() {
   const [activeGoal, setActiveGoal] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [viewAsDaughter, setViewAsDaughter] = useState(false);
 
   useEffect(() => {
     sb.auth.getSession().then(({ data }) => setAuthUser(data.session ? data.session.user : null));
@@ -367,7 +369,8 @@ function App() {
     return <div className="loading">Opening your wallet…</div>;
   }
 
-  const isParent = profile.role === "parent";
+  const actuallyParent = profile.role === "parent";
+  const isParent = actuallyParent && !viewAsDaughter;
   const savedByGoal = computeGoalSavings(data.goals, data.transactions);
   const balance = Object.values(savedByGoal).reduce((a, b) => a + b, 0);
   const defaultGoal = data.goals.find((g) => g.is_default);
@@ -480,7 +483,12 @@ function App() {
       <div className="topbar">
         <div className="brand"><span className="dot"></span>Pocket</div>
         <div className="whoami">
-          <span className="name">{isParent ? "👪 " : "👤 "}{profile.display_name}</span>
+          {actuallyParent && (
+            <button className="signout" style={{ color: "var(--teal-dark)" }} onClick={() => setViewAsDaughter(!viewAsDaughter)}>
+              {viewAsDaughter ? "👪 view as Parent" : "👪 view as Zoe"}
+            </button>
+          )}
+          <span className="name">{isParent ? "👪 " : "👤 "}{isParent ? profile.display_name : "Zoe"}</span>
           <button className="signout" onClick={() => sb.auth.signOut()}>Sign out</button>
         </div>
       </div>
@@ -744,7 +752,7 @@ function AmountModal({ title, confirmLabel, onClose, onConfirm, hideNameField, g
           </div>
         )}
         <div className="field">
-          <label>Amount ($)</label>
+          <label>Amount (€)</label>
           <input type="number" inputMode="decimal" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.5 }} onClick={() => valid && onConfirm(name.trim(), parseFloat(amount), goalId)}>
@@ -769,7 +777,7 @@ function NewGoalModal({ onClose, onConfirm }) {
           <input type="text" placeholder="e.g. New bike, Weekly spending" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="field">
-          <label>Target amount ($) — optional</label>
+          <label>Target amount (€) — optional</label>
           <input type="number" inputMode="decimal" placeholder="Leave blank for no target" value={target} onChange={(e) => setTarget(e.target.value)} />
         </div>
         <div className="checkbox-field">
@@ -797,7 +805,7 @@ function NewChoreModal({ onClose, onConfirm }) {
           <input type="text" placeholder="e.g. Feed the dog" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="field">
-          <label>Pay ($)</label>
+          <label>Pay (€)</label>
           <input type="number" inputMode="decimal" placeholder="0.00" value={pay} onChange={(e) => setPay(e.target.value)} />
         </div>
         <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.5 }} onClick={() => valid && onConfirm(name.trim(), parseFloat(pay))}>
