@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pocket</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #FAF7F2;
+    --card: #FFFFFF;
+    --teal: #2D8577;
+    --teal-dark: #1F6155;
+    --coral: #FF6B5B;
+    --gold: #F4B942;
+    --ink: #1F2937;
+    --ink-soft: #6B7280;
+    --line: #EEE8DD;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+  #root { width: 100%; max-width: 480px; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 90px; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 20px 8px;
+  }
+  .brand { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 22px; color: var(--teal-dark); display:flex; align-items:center; gap:8px;}
+  .brand .dot { width:10px; height:10px; border-radius:50%; background: var(--coral); display:inline-block; }
+  .whoami { display: flex; align-items: center; gap: 10px; }
+  .whoami .name { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+  .signout { font-size: 11.5px; font-weight: 600; color: var(--coral); cursor: pointer; background: none; border: none; }
+
+  .hero {
+    margin: 8px 20px 20px;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+    border-radius: 24px;
+    padding: 28px 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; right: -30px; top: -30px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .hero-label { font-size: 13px; opacity: 0.85; font-weight: 500; }
+  .hero-amount { font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 600; margin-top: 4px; }
+  .hero-sub { font-size: 12.5px; opacity: 0.8; margin-top: 10px; }
+
+  .tabs {
+    display: flex; gap: 6px; padding: 0 20px; margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0; border-radius: 12px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+    background: transparent; transition: all .15s ease;
+  }
+  .tab.active { background: var(--card); color: var(--teal-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+  .subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .subtab {
+    padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    color: var(--ink-soft); cursor: pointer; border: 1.5px solid var(--line); background: var(--card);
+  }
+  .subtab.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+  .section { padding: 0 20px; }
+  .section-title {
+    font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600;
+    margin: 18px 0 10px; color: var(--ink); display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-title .hint { font-family:'Inter',sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-soft); }
+
+  .card {
+    background: var(--card); border-radius: 16px; padding: 16px;
+    border: 1px solid var(--line); margin-bottom: 10px;
+  }
+
+  .txn { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+  .txn:not(:last-child) { border-bottom: 1px solid var(--line); }
+  .txn-icon {
+    width: 38px; height: 38px; border-radius: 12px; display:flex; align-items:center; justify-content:center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .txn-icon.in { background: #E6F4F1; }
+  .txn-icon.out { background: #FDECEA; }
+  .txn-body { flex: 1; min-width: 0; }
+  .txn-name { font-size: 14px; font-weight: 600; }
+  .txn-date { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+  .txn-goal { font-size: 11px; color: var(--ink-soft); }
+  .txn-amt { font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+  .txn-amt.in { color: var(--teal-dark); }
+  .txn-amt.out { color: var(--coral); }
+
+  .empty { text-align: center; padding: 30px 10px; color: var(--ink-soft); font-size: 13.5px; }
+  .empty .emoji { font-size: 30px; margin-bottom: 8px; display:block; }
+
+  .goal-card { margin-bottom: 14px; }
+  .goal-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .goal-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .goal-default-badge {
+    font-size: 10px; font-weight: 700; color: var(--teal-dark); background: #E6F4F1;
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .goal-nums { font-size: 12.5px; color: var(--ink-soft); }
+  .jar { height: 14px; background: #F0ECE3; border-radius: 999px; overflow: hidden; }
+  .jar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--coral)); border-radius: 999px; transition: width .4s ease; }
+  .goal-foot { display:flex; justify-content: space-between; align-items:center; margin-top: 10px; }
+  .goal-pct { font-size: 12px; font-weight: 700; color: var(--teal-dark); }
+
+  .chore { display:flex; align-items:center; gap: 12px; padding: 12px 0; }
+  .chore:not(:last-child) { border-bottom: 1px solid var(--line); }
+  .chore-check {
+    width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;
+    font-size: 14px; color: white; transition: all .15s ease;
+  }
+  .chore-check.done { background: var(--teal); border-color: var(--teal); }
+  .chore-check.disabled { cursor: default; opacity: .6; }
+  .chore-body { flex: 1; min-width: 0; }
+  .chore-name { font-size: 14.5px; font-weight: 600; }
+  .chore-name.done { text-decoration: line-through; color: var(--ink-soft); }
+  .chore-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .chore-pay { font-size: 13.5px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .chore-status {
+    font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  }
+  .chore-status.pending_approval { background: #FFF3D6; color: #92650B; }
+  .chore-status.approved { background: #E6F4F1; color: var(--teal-dark); }
+  .chore-status.rejected { background: #FDECEA; color: var(--coral); }
+  .chore-status.missed { background: #F0ECE3; color: var(--ink-soft); }
+  .chore-actions { display: flex; gap: 6px; }
+  .mini-btn {
+    font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 8px; border: none; cursor: pointer;
+  }
+  .mini-btn.approve { background: var(--teal); color: white; }
+  .mini-btn.reject { background: var(--card); color: var(--coral); border: 1.5px solid var(--coral); }
+  .mini-btn.retry { background: var(--card); color: var(--teal-dark); border: 1.5px solid var(--teal); }
+
+  .history-day { margin-bottom: 16px; }
+  .history-date { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+
+  .btn {
+    width: 100%; padding: 13px; border-radius: 12px; border: none;
+    background: var(--teal); color: white; font-weight: 700; font-size: 14px;
+    cursor: pointer; margin-top: 4px; font-family: 'Inter', sans-serif;
+  }
+  .btn.secondary { background: var(--card); color: var(--teal-dark); border: 1.5px solid var(--teal); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { margin-top: 0; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(31,41,55,0.4); display: flex;
+    align-items: flex-end; justify-content: center; z-index: 50;
+  }
+  .modal {
+    background: var(--card); width: 100%; max-width: 480px; border-radius: 24px 24px 0 0;
+    padding: 24px 20px 28px; animation: slideup .2s ease; max-height: 85vh; overflow-y: auto;
+  }
+  @keyframes slideup { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  .modal h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; margin-bottom: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); display:block; margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--line);
+    font-size: 14px; font-family: 'Inter', sans-serif; background: var(--bg);
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--teal); }
+  .checkbox-field { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .checkbox-field input { width: auto; }
+  .checkbox-field label { margin-bottom: 0; }
+
+  .loading { text-align:center; padding: 60px 20px; color: var(--ink-soft); }
+
+  .login-screen {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
+  }
+  .login-brand { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 30px; color: var(--teal-dark); margin-bottom: 6px; }
+  .login-sub { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 28px; }
+  .google-btn {
+    display: flex; align-items: center; gap: 10px; background: white; border: 1.5px solid var(--line);
+    padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--ink);
+  }
+  .access-denied { font-size: 13.5px; color: var(--coral); margin-top: 20px; max-width: 300px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// ---- Supabase setup -------------------------------------------------
+const SUPABASE_URL = "https://fhbquojqccosvuhzcrai.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoYnF1b2pxY2Nvc3Z1aHpjcmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMzA1ODAsImV4cCI6MjEwMjgwNjU4MH0.i7KLYf9_o0vbAaUOe8Hgg_mpmG6517ArfU9RDdJOgHw";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Hardcoded role mapping for this 2-person household app.
+const ROLE_MAP = {
+  "stserk@gmail.com": { role: "parent", display_name: "Parent" },
+  "zoe.tserkz@gmail.com": { role: "daughter", display_name: "Zoe" },
+};
+
+function fmt(n) {
+  return "$" + Number(n).toFixed(2);
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + "h ago";
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days + "d ago";
+  return d.toLocaleDateString();
+}
+
+function prettyDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
+// ---- Data layer -------------------------------------------------------
+async function ensureUserRow(authUser) {
+  const mapping = ROLE_MAP[authUser.email];
+  if (!mapping) return null;
+  const { data, error } = await sb
+    .from("users")
+    .upsert({ id: authUser.id, email: authUser.email, role: mapping.role, display_name: mapping.display_name })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function runMissedCleanup() {
+  await sb
+    .from("chore_entries")
+    .update({ status: "missed" })
+    .eq("status", "pending")
+    .lt("date", todayStr());
+}
+
+async function ensureTodayEntries(defaultGoalId) {
+  const { data: templates } = await sb.from("chore_templates").select("*").eq("active", true);
+  if (!templates || templates.length === 0) return;
+  const { data: existing } = await sb.from("chore_entries").select("template_id").eq("date", todayStr());
+  const existingIds = new Set((existing || []).map((e) => e.template_id));
+  const missing = templates.filter((t) => !existingIds.has(t.id));
+  if (missing.length === 0) return;
+  await sb.from("chore_entries").insert(
+    missing.map((t) => ({ template_id: t.id, goal_id: defaultGoalId || null, date: todayStr(), status: "pending" }))
+  );
+}
+
+async function fetchAll() {
+  const [{ data: goals }, { data: transactions }, { data: templates }, { data: entries }, { data: users }] = await Promise.all([
+    sb.from("goals").select("*").order("created_at"),
+    sb.from("transactions").select("*").order("created_at", { ascending: false }),
+    sb.from("chore_templates").select("*").order("created_at"),
+    sb.from("chore_entries").select("*").order("date", { ascending: false }),
+    sb.from("users").select("*"),
+  ]);
+  return { goals: goals || [], transactions: transactions || [], templates: templates || [], entries: entries || [], users: users || [] };
+}
+
+function computeGoalSavings(goals, transactions) {
+  const byGoal = {};
+  goals.forEach((g) => (byGoal[g.id] = 0));
+  transactions.forEach((t) => {
+    if (!(t.goal_id in byGoal)) byGoal[t.goal_id] = 0;
+    byGoal[t.goal_id] += t.type === "in" ? Number(t.amount) : -Number(t.amount);
+  });
+  return byGoal;
+}
+
+// ---- App ---------------------------------------------------------------
+function App() {
+  const [authUser, setAuthUser] = useState(undefined); // undefined = loading, null = logged out
+  const [profile, setProfile] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [data, setData] = useState(null);
+  const [tab, setTab] = useState("home");
+  const [choreSubtab, setChoreSubtab] = useState("today");
+  const [modal, setModal] = useState(null);
+  const [activeGoal, setActiveGoal] = useState(null);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => setAuthUser(data.session ? data.session.user : null));
+    const { data: sub } = sb.auth.onAuthStateChange((_event, session) => {
+      setAuthUser(session ? session.user : null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const reload = useCallback(async () => {
+    const all = await fetchAll();
+    setData(all);
+  }, []);
+
+  useEffect(() => {
+    if (!authUser) return;
+    (async () => {
+      try {
+        const p = await ensureUserRow(authUser);
+        if (!p) {
+          setAccessDenied(true);
+          return;
+        }
+        setProfile(p);
+        await runMissedCleanup();
+        const initial = await fetchAll();
+        const defaultGoal = initial.goals.find((g) => g.is_default);
+        await ensureTodayEntries(defaultGoal ? defaultGoal.id : null);
+        await reload();
+      } catch (e) {
+        setError(e.message || "Something went wrong loading your data.");
+      }
+    })();
+  }, [authUser, reload]);
+
+  if (authUser === undefined) {
+    return <div className="loading">Loading…</div>;
+  }
+
+  if (authUser === null) {
+    return <LoginScreen />;
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="login-screen">
+        <div className="login-brand">Pocket</div>
+        <div className="access-denied">This Google account isn't set up for this wallet. Ask the person who built it to add your email.</div>
+        <button className="google-btn" style={{ marginTop: 24 }} onClick={() => sb.auth.signOut()}>Sign out</button>
+      </div>
+    );
+  }
+
+  if (!profile || !data) {
+    return <div className="loading">Opening your wallet…</div>;
+  }
+
+  const isParent = profile.role === "parent";
+  const savedByGoal = computeGoalSavings(data.goals, data.transactions);
+  const balance = Object.values(savedByGoal).reduce((a, b) => a + b, 0);
+  const defaultGoal = data.goals.find((g) => g.is_default);
+  const today = todayStr();
+  const todayEntries = data.entries.filter((e) => e.date === today);
+  const historyEntries = data.entries.filter((e) => e.date !== today);
+  const templateById = Object.fromEntries(data.templates.map((t) => [t.id, t]));
+  const goalById = Object.fromEntries(data.goals.map((g) => [g.id, g]));
+
+  async function withBusy(fn) {
+    setBusy(true);
+    try {
+      await fn();
+      await reload();
+    } catch (e) {
+      setError(e.message || "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const addManualTransaction = (name, amount, type, goalId) =>
+    withBusy(async () => {
+      const { error } = await sb.from("transactions").insert({
+        goal_id: goalId,
+        name,
+        amount,
+        type,
+        source: "manual",
+        created_by: profile.id,
+      });
+      if (error) throw error;
+    });
+
+  const createGoal = (name, target, isDefault) =>
+    withBusy(async () => {
+      if (isDefault) {
+        await sb.from("goals").update({ is_default: false }).eq("is_default", true);
+      }
+      const { error } = await sb.from("goals").insert({ name, target: target || null, is_default: !!isDefault, saved: 0 });
+      if (error) throw error;
+    });
+
+  const checkChore = (entry) =>
+    withBusy(async () => {
+      const goalId = entry.goal_id || (defaultGoal ? defaultGoal.id : null);
+      const { error } = await sb
+        .from("chore_entries")
+        .update({ status: "pending_approval", checked_at: new Date().toISOString(), goal_id: goalId })
+        .eq("id", entry.id);
+      if (error) throw error;
+    });
+
+  const setChoreGoal = (entry, goalId) =>
+    withBusy(async () => {
+      const { error } = await sb.from("chore_entries").update({ goal_id: goalId }).eq("id", entry.id);
+      if (error) throw error;
+    });
+
+  const approveChore = (entry) =>
+    withBusy(async () => {
+      const template = templateById[entry.template_id];
+      const { data: txn, error: txnErr } = await sb
+        .from("transactions")
+        .insert({
+          goal_id: entry.goal_id || defaultGoal.id,
+          name: template.name + " (chore)",
+          amount: template.pay,
+          type: "in",
+          source: "chore",
+          source_id: entry.id,
+          created_by: profile.id,
+        })
+        .select()
+        .single();
+      if (txnErr) throw txnErr;
+      const { error } = await sb
+        .from("chore_entries")
+        .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: profile.id, transaction_id: txn.id })
+        .eq("id", entry.id);
+      if (error) throw error;
+    });
+
+  const rejectChore = (entry) =>
+    withBusy(async () => {
+      const { error } = await sb
+        .from("chore_entries")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: profile.id })
+        .eq("id", entry.id);
+      if (error) throw error;
+    });
+
+  const retryChore = (entry) =>
+    withBusy(async () => {
+      const { error } = await sb
+        .from("chore_entries")
+        .update({ status: "pending_approval", checked_at: new Date().toISOString(), reviewed_at: null, reviewed_by: null })
+        .eq("id", entry.id);
+      if (error) throw error;
+    });
+
+  const addChoreTemplate = (name, pay) =>
+    withBusy(async () => {
+      const { error } = await sb.from("chore_templates").insert({ name, pay });
+      if (error) throw error;
+    });
+
+  return (
+    <div>
+      <div className="topbar">
+        <div className="brand"><span className="dot"></span>Pocket</div>
+        <div className="whoami">
+          <span className="name">{isParent ? "👪 " : "👤 "}{profile.display_name}</span>
+          <button className="signout" onClick={() => sb.auth.signOut()}>Sign out</button>
+        </div>
+      </div>
+
+      <div className="hero">
+        <div className="hero-label">Total balance</div>
+        <div className="hero-amount">{fmt(balance)}</div>
+        <div className="hero-sub">across {data.goals.length} goal{data.goals.length !== 1 ? "s" : ""}</div>
+      </div>
+
+      <div className="tabs">
+        {["home", "goals", "chores"].map((t) => (
+          <div key={t} className={"tab" + (tab === t ? " active" : "")} onClick={() => setTab(t)}>
+            {t === "home" ? "Activity" : t === "goals" ? "Goals" : "Chores"}
+          </div>
+        ))}
+      </div>
+
+      <div className="section">
+        {tab === "home" && (
+          <div>
+            <div className="btn-row" style={{ marginBottom: "14px" }}>
+              {isParent && <button className="btn" onClick={() => setModal("addfunds")}>+ Add funds</button>}
+              <button className="btn secondary" onClick={() => setModal("spend")}>− Log spending</button>
+            </div>
+            <div className="card">
+              {data.transactions.length === 0 ? (
+                <div className="empty"><span className="emoji">👛</span>No transactions yet</div>
+              ) : (
+                data.transactions.map((t) => (
+                  <div className="txn" key={t.id}>
+                    <div className={"txn-icon " + t.type}>{t.type === "in" ? "↓" : "↑"}</div>
+                    <div className="txn-body">
+                      <div className="txn-name">{t.name}</div>
+                      <div className="txn-date">
+                        {timeAgo(t.created_at)} · <span className="txn-goal">{goalById[t.goal_id] ? goalById[t.goal_id].name : "—"}</span>
+                      </div>
+                    </div>
+                    <div className={"txn-amt " + t.type}>{t.type === "in" ? "+" : "−"}{fmt(t.amount)}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === "goals" && (
+          <div>
+            <button className="btn" style={{ marginBottom: "14px" }} onClick={() => setModal("newgoal")}>+ New goal</button>
+            {data.goals.length === 0 && <div className="empty"><span className="emoji">🎯</span>No goals yet — add one!</div>}
+            {data.goals.map((g) => {
+              const saved = savedByGoal[g.id] || 0;
+              const pct = g.target ? Math.min(100, Math.round((saved / g.target) * 100)) : null;
+              return (
+                <div className="card goal-card" key={g.id}>
+                  <div className="goal-head">
+                    <div className="goal-name">
+                      {g.name}
+                      {g.is_default && <span className="goal-default-badge">default</span>}
+                    </div>
+                    <div className="goal-nums">{g.target ? fmt(saved) + " / " + fmt(g.target) : fmt(saved)}</div>
+                  </div>
+                  {g.target != null && (
+                    <div className="jar"><div className="jar-fill" style={{ width: pct + "%" }}></div></div>
+                  )}
+                  <div className="goal-foot">
+                    <div className="goal-pct">{g.target ? pct + "% there" + (pct >= 100 ? " 🎉" : "") : "no target"}</div>
+                    {isParent && (
+                      <button
+                        className="btn secondary"
+                        style={{ width: "auto", padding: "7px 14px", fontSize: "12.5px" }}
+                        onClick={() => { setActiveGoal(g.id); setModal("addtogoal"); }}
+                      >
+                        Add money
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === "chores" && (
+          <div>
+            <div className="subtabs">
+              <div className={"subtab" + (choreSubtab === "today" ? " active" : "")} onClick={() => setChoreSubtab("today")}>Today</div>
+              <div className={"subtab" + (choreSubtab === "history" ? " active" : "")} onClick={() => setChoreSubtab("history")}>History</div>
+            </div>
+
+            {choreSubtab === "today" && (
+              <div>
+                {isParent && (
+                  <button className="btn secondary" style={{ marginBottom: 14 }} onClick={() => setModal("newchore")}>+ New chore</button>
+                )}
+                <div className="card">
+                  {todayEntries.length === 0 && <div className="empty"><span className="emoji">🧹</span>No chores set up</div>}
+                  {todayEntries.map((e) => {
+                    const template = templateById[e.template_id];
+                    if (!template) return null;
+                    const goal = goalById[e.goal_id];
+                    return (
+                      <div className="chore" key={e.id}>
+                        <div
+                          className={"chore-check" + (e.status !== "pending" ? " done" : "") + (e.status !== "pending" || isParent ? " disabled" : "")}
+                          onClick={() => { if (e.status === "pending" && !isParent) checkChore(e); }}
+                        >
+                          {e.status !== "pending" ? "✓" : ""}
+                        </div>
+                        <div className="chore-body">
+                          <div className={"chore-name" + (e.status !== "pending" ? " done" : "")}>{template.name}</div>
+                          <div className="chore-sub">→ {goal ? goal.name : "no goal set"}</div>
+                        </div>
+                        {e.status === "pending" && <div className="chore-pay">+{fmt(template.pay)}</div>}
+                        {e.status === "pending_approval" && isParent && (
+                          <div className="chore-actions">
+                            <button className="mini-btn approve" onClick={() => approveChore(e)}>Approve</button>
+                            <button className="mini-btn reject" onClick={() => rejectChore(e)}>Reject</button>
+                          </div>
+                        )}
+                        {e.status === "pending_approval" && !isParent && <div className="chore-status pending_approval">waiting</div>}
+                        {e.status === "approved" && <div className="chore-status approved">approved</div>}
+                        {e.status === "rejected" && !isParent && (
+                          <button className="mini-btn retry" onClick={() => retryChore(e)}>Try again</button>
+                        )}
+                        {e.status === "rejected" && isParent && <div className="chore-status rejected">rejected</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {choreSubtab === "history" && (
+              <div>
+                {historyEntries.length === 0 && <div className="empty"><span className="emoji">📜</span>Nothing here yet</div>}
+                {Object.entries(
+                  historyEntries.reduce((acc, e) => {
+                    (acc[e.date] = acc[e.date] || []).push(e);
+                    return acc;
+                  }, {})
+                )
+                  .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+                  .map(([date, list]) => (
+                    <div className="history-day" key={date}>
+                      <div className="history-date">{prettyDate(date)}</div>
+                      <div className="card">
+                        {list.map((e) => {
+                          const template = templateById[e.template_id];
+                          if (!template) return null;
+                          return (
+                            <div className="chore" key={e.id}>
+                              <div className="chore-body">
+                                <div className="chore-name">{template.name}</div>
+                              </div>
+                              <div className={"chore-status " + e.status}>{e.status.replace("_", " ")}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {modal === "addfunds" && (
+        <AmountModal
+          title="Add funds"
+          confirmLabel="Add"
+          goals={data.goals}
+          defaultGoalId={defaultGoal ? defaultGoal.id : null}
+          onClose={() => setModal(null)}
+          onConfirm={(name, amt, goalId) => { addManualTransaction(name || "Added by parent", amt, "in", goalId); setModal(null); }}
+        />
+      )}
+      {modal === "spend" && (
+        <AmountModal
+          title="Log spending"
+          confirmLabel="Log"
+          goals={data.goals}
+          defaultGoalId={defaultGoal ? defaultGoal.id : null}
+          onClose={() => setModal(null)}
+          onConfirm={(name, amt, goalId) => {
+            const avail = savedByGoal[goalId] || 0;
+            if (amt > avail) { setError("That's more than what's saved in that goal."); return; }
+            addManualTransaction(name || "Spent", amt, "out", goalId);
+            setModal(null);
+          }}
+        />
+      )}
+      {modal === "newgoal" && (
+        <NewGoalModal onClose={() => setModal(null)} onConfirm={(name, target, isDefault) => { createGoal(name, target, isDefault); setModal(null); }} />
+      )}
+      {modal === "addtogoal" && (
+        <AmountModal
+          title="Add to goal"
+          confirmLabel="Add"
+          goals={data.goals}
+          defaultGoalId={activeGoal}
+          lockGoal
+          onClose={() => { setModal(null); setActiveGoal(null); }}
+          onConfirm={(name, amt, goalId) => { addManualTransaction("Added to " + (goalById[goalId] ? goalById[goalId].name : "goal"), amt, "in", goalId); setModal(null); setActiveGoal(null); }}
+          hideNameField
+        />
+      )}
+      {modal === "newchore" && (
+        <NewChoreModal onClose={() => setModal(null)} onConfirm={(name, pay) => { addChoreTemplate(name, pay); setModal(null); }} />
+      )}
+
+      {error && (
+        <div className="modal-overlay" onClick={() => setError(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Hold on</h3>
+            <p style={{ fontSize: "14px", color: "var(--ink-soft)", marginBottom: "16px" }}>{error}</p>
+            <button className="btn" onClick={() => setError(null)}>Got it</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LoginScreen() {
+  return (
+    <div className="login-screen">
+      <div className="login-brand">Pocket</div>
+      <div className="login-sub">Sign in with Google to open your wallet</div>
+      <button className="google-btn" onClick={() => sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })}>
+        Sign in with Google
+      </button>
+    </div>
+  );
+}
+
+function AmountModal({ title, confirmLabel, onClose, onConfirm, hideNameField, goals, defaultGoalId, lockGoal }) {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [goalId, setGoalId] = useState(defaultGoalId || (goals[0] ? goals[0].id : ""));
+  const valid = parseFloat(amount) > 0 && goalId;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>{title}</h3>
+        {!hideNameField && (
+          <div className="field">
+            <label>What's it for?</label>
+            <input type="text" placeholder="e.g. Movie tickets" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+        )}
+        {!lockGoal && goals.length > 0 && (
+          <div className="field">
+            <label>Goal</label>
+            <select value={goalId} onChange={(e) => setGoalId(e.target.value)}>
+              {goals.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}{g.is_default ? " (default)" : ""}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="field">
+          <label>Amount ($)</label>
+          <input type="number" inputMode="decimal" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        </div>
+        <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.5 }} onClick={() => valid && onConfirm(name.trim(), parseFloat(amount), goalId)}>
+          {confirmLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NewGoalModal({ onClose, onConfirm }) {
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
+  const valid = name.trim().length > 0;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>New goal</h3>
+        <div className="field">
+          <label>Goal name</label>
+          <input type="text" placeholder="e.g. New bike, Weekly spending" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Target amount ($) — optional</label>
+          <input type="number" inputMode="decimal" placeholder="Leave blank for no target" value={target} onChange={(e) => setTarget(e.target.value)} />
+        </div>
+        <div className="checkbox-field">
+          <input type="checkbox" id="isdefault" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+          <label htmlFor="isdefault">Make this the default goal for chore payouts</label>
+        </div>
+        <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.5 }} onClick={() => valid && onConfirm(name.trim(), target ? parseFloat(target) : null, isDefault)}>
+          Create goal
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NewChoreModal({ onClose, onConfirm }) {
+  const [name, setName] = useState("");
+  const [pay, setPay] = useState("");
+  const valid = name.trim().length > 0 && parseFloat(pay) > 0;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>New chore</h3>
+        <div className="field">
+          <label>Chore name</label>
+          <input type="text" placeholder="e.g. Feed the dog" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Pay ($)</label>
+          <input type="number" inputMode="decimal" placeholder="0.00" value={pay} onChange={(e) => setPay(e.target.value)} />
+        </div>
+        <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.5 }} onClick={() => valid && onConfirm(name.trim(), parseFloat(pay))}>
+          Create chore
+        </button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
